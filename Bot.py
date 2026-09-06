@@ -13,11 +13,11 @@ CHANNEL_USERNAME = "@KinoPoiskBt"  # Например: "@kinoclub"
 CHANNEL_URL = "https://t.me/KinoPoiskBt"
 
 MOVIES_DB = {
-    "0001": "Человек-паук",
-    "0002": "Интерстеллар",
-    "0003": "Титаник",
-    "0004": "Матрица",
-    "0005": "Аватар"
+    "2133": "Человек-паук",
+    "1045": "Интерстеллар",
+    "5091": "Титаник",
+    "3322": "Матрица",
+    "1234": "Аватар"
 }
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
