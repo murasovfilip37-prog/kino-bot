@@ -47,7 +47,7 @@ async def cmd_start(message: Message):
         )
         await message.answer(text, disable_web_page_preview=True)
     else:
-        await message.answer("Привет! Отправь мне код фильма (например, 0001), и я вышлю тебе название.")
+        await message.answer("Привет меня зовут финдик! здесь я помогу тебе узнать название Фильма. Отправь мне код фильма (например, 0001), и я вышлю тебе название фильма.")
 
 # Обработчик текстовых сообщений (кодов фильмов)
 @dp.message()
