@@ -1,15 +1,16 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, F
+from aiogram import Bot, Dispatcher
 from aiogram.filters import CommandStart
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiohttp import web
 
-TOKEN = "8723320552:AAHwX7FjjnksbxmzTe6ZlMs6SRtwd36KnPI"
+TOKEN = "8723320552:AAHwX7fjjinksbxmzTe6Z1Ms6SRtwd36KnPI"
 
-# Укажите ваш настоящий канал (юзернейм и ссылку)
-CHANNEL_USERNAME = "@KinoPoiskBt"  # Например: "@kinoclub"
+# Укажите ваш настоящий канал
+CHANNEL_USERNAME = "@KinoPoiskBt" 
 CHANNEL_URL = "https://t.me/KinoPoiskBt"
 
 MOVIES_DB = {
@@ -29,73 +30,45 @@ async def check_subscription(user_id: int) -> bool:
         member = await bot.get_chat_member(chat_id=CHANNEL_USERNAME, user_id=user_id)
         if member.status in ["member", "administrator", "creator"]:
             return True
+        return False
     except Exception as e:
         print(f"Ошибка при проверке подписки: {e}")
-    return False
+        return False
 
-# Команда /start
+# Обработчик команды /start
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
-    user_id = message.from_user.id
-    is_subscribed = await check_subscription(user_id)
-    
-    if not is_subscribed:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Подписаться на канал", url=CHANNEL_URL)],
-            [InlineKeyboardButton(text="🔄 Я подписался", callback_data="check_sub")]
-        ])
-        await message.answer(
-            "Привет! 🎬 Чтобы пользоваться ботом, пожалуйста, подпишитесь на наш канал:",
-            reply_markup=keyboard
+    is_subbed = await check_subscription(message.from_user.id)
+    if not is_subbed:
+        text = (
+            f"❌ Для использования бота необходимо подписаться на наш канал!\n\n"
+            f"👉 <a href='{CHANNEL_URL}'>Подписаться на канал</a>\n\n"
+            f"После подписки отправьте команду /start снова."
         )
-        return
-
-    await message.answer("Приветствую! 🎬 Отправьте мне цифровой код фильма, и я скажу его название!")
-
-# ОБРАБОТЧИК КНОПКИ «Я подписался»
-@dp.callback_query(F.data == "check_sub")
-async def process_check_sub(callback: CallbackQuery):
-    user_id = callback.from_user.id
-    is_subscribed = await check_subscription(user_id)
-    
-    if is_subscribed:
-        # Убираем кнопку и пишем об успешной проверке
-        await callback.message.edit_text("Спасибо за подписку! 🎉 Теперь отправьте мне цифровой код фильма:")
+        await message.answer(text, disable_web_page_preview=True)
     else:
-        # Если все еще не подписан, показываем уведомление во всплывающем окне
-        await callback.answer("Вы еще не подписались на канал! ❌ Подпишитесь, а затем нажмите кнопку снова.", show_alert=True)
+        await message.answer("Привет! Отправь мне код фильма (например, 0001), и я вышлю тебе название.")
 
-# Обработка текстовых кодов
-@dp.message(F.text)
-async def check_movie_code(message: Message):
-    user_id = message.from_user.id
-    
-    is_subscribed = await check_subscription(user_id)
-    if not is_subscribed:
-        keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="📢 Подписаться на канал", url=CHANNEL_URL)],
-            [InlineKeyboardButton(text="🔄 Я подписался", callback_data="check_sub")]
-        ])
-        await message.answer("⚠️ Сначала подпишитесь на канал, чтобы отправлять коды!", reply_markup=keyboard)
+# Обработчик текстовых сообщений (кодов фильмов)
+@dp.message()
+async def get_movie(message: Message):
+    is_subbed = await check_subscription(message.from_user.id)
+    if not is_subbed:
+        text = (
+            f"❌ Для использования бота необходимо подписаться на наш канал!\n\n"
+            f"👉 <a href='{CHANNEL_URL}'>Подписаться на канал</a>"
+        )
+        await message.answer(text, disable_web_page_preview=True)
         return
 
     code = message.text.strip()
-    
     if code in MOVIES_DB:
         movie_name = MOVIES_DB[code]
         await message.answer(f"Нашел для вас фильм: <b>{movie_name}</b> 🍿")
     else:
         await message.answer("Упс! Фильм с таким кодом не найден в базе. Проверьте правильность кода.")
 
-async def main():
-    print("Бот успешно запущен!")
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    asyncio.run(main())
-from aiohttp import web
-
+# Настройка веб-сервера для Render (чтобы порт был открыт)
 async def handle(request):
     return web.Response(text="Bot is alive!")
 
@@ -107,3 +80,14 @@ async def web_server():
     await runner.setup()
     site = web.TCPSite(runner, "0.0.0.0", 10000)
     await site.start()
+
+# Главная функция запуска всего вместе
+async def main():
+    print("Бот успешно запущен!")
+    await asyncio.gather(
+        web_server(),
+        dp.start_polling(bot)
+    )
+
+if __name__ == "__main__":
+    asyncio.run(main())
