@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiohttp import web
 
-TOKEN = "8723320552:AAHwX7fjjinksbxmzTe6Z1Ms6SRtwd36KnPI"
+TOKEN = "8723320552:AAHwX7FjjnksbxmzTe6ZlMs6SRtwd36KnPI"
 
 # Укажите ваш настоящий канал
 CHANNEL_USERNAME = "@KinoPoiskBt" 
